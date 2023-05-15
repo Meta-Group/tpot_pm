@@ -65,7 +65,9 @@ from .operator_utils import TPOTOperatorClassFactory, Operator, ARGType
 from .encoder import (
     get_traces,
     one_hot,
-    alignments
+    alignments,
+    word2vec,
+    node2vec_
 )
 
 from .export_utils import (
@@ -184,7 +186,7 @@ class TPOTBase(BaseEstimator):
 
             ['neg_median_absolute_error', 'neg_mean_absolute_error',
             'neg_mean_squared_error', 'r2']
-        
+
         cv: int or cross-validation generator, optional (default: 5)
             If CV is a number, then it is the number of folds to evaluate each
             pipeline over in k-fold cross-validation during the TPOT optimization
@@ -297,7 +299,7 @@ class TPOTBase(BaseEstimator):
             raise RuntimeError(
                 "Do not instantiate the TPOTBase class directly; use TPOTRegressor or TPOTClassifier or TPOTRegressor instead."
             )
-        
+
         self.population_size = population_size
         self.offspring_size = offspring_size
         self.generations = generations
@@ -758,11 +760,11 @@ class TPOTBase(BaseEstimator):
         #             "a more reasonable outcome from optimization process in TPOT."
         #         )
 
-        
         self.traces, self.case_ids = get_traces(log)
-        print(len(set(log['concept:name'])))
-        alignments(log.iloc[:50,:])
-
+        enc_onehot = one_hot(log)
+        enc_alignments = alignments(log)
+        enc_word2vec = word2vec(self.traces)
+        enc_node2vec = node2vec_(log, self.traces)
         quit()
 
         # Set the seed for the GP run
@@ -877,7 +879,7 @@ class TPOTBase(BaseEstimator):
                     # Standard truthiness checks won't work for tqdm
                     if not isinstance(self._pbar, type(None)):
                         self._pbar.close()
-                    
+
                     self._update_top_pipeline()
                     self._summary_of_best_pipeline(features)
                     # Delete the temporary cache before exiting
@@ -1029,7 +1031,7 @@ class TPOTBase(BaseEstimator):
                     self._optimized_pipeline
                 )
                 print("Best Overall Pipeline:", optimized_pipeline_str)
-            
+
             partial_scores = partial(
                 _wrapped_multi_object_validation,
                 features=features,
@@ -1039,7 +1041,7 @@ class TPOTBase(BaseEstimator):
                 # use_dask=self.use_dask,
                 scorers=self.scorers
             )
-            
+
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 val = partial_scores(
@@ -1058,12 +1060,12 @@ class TPOTBase(BaseEstimator):
             if "chs" in val:
                 chs = val["chs"]
             if "bic" in val:
-                bic = val["bic"]    
-                    
+                bic = val["bic"]
+
             self._scores = {"sil": sil, "dbs": dbs, "chs": chs, "bic": bic}
             self._best_overall_pipeline = optimized_pipeline_str
             self._n_clusters = len(set(labels))
-            
+
             # Store and fit the entire Pareto front as fitted models for convenience
             self.pareto_front_fitted_pipelines_ = {}
 
@@ -1174,13 +1176,13 @@ class TPOTBase(BaseEstimator):
             raise AttributeError(
                 "A pipeline has not yet been optimized. Please call fit() first."
             )
-            
+
         else:
             if not (hasattr(self.fitted_pipeline_, "predict_proba")):
                 raise AttributeError(
                     "The fitted pipeline does not have the predict_proba() function."
                 )
-            
+
         return True
 
     @available_if(_check_proba)
@@ -1198,7 +1200,7 @@ class TPOTBase(BaseEstimator):
             The class probabilities of the input samples
 
         """
-    
+
         features = self._check_dataset(features, target=None, sample_weight=None)
         return self.fitted_pipeline_.predict_proba(features)
 
@@ -1362,7 +1364,7 @@ class TPOTBase(BaseEstimator):
                 output_file.write(to_write)
         else:
             return to_write
-        
+
     def get_run_stats(self):
         return self._best_overall_pipeline, self._scores, self._n_clusters
 
@@ -1501,17 +1503,17 @@ class TPOTBase(BaseEstimator):
                         total_mins_elapsed
                     )
                 )
-            
+
     def _update(self, population):
         self._pareto_front.clear()
-        best_pipeline = ''    
+        best_pipeline = ''
         # [print(f"Population: {individual}") for individual in population]
         for ind in population:
             if best_pipeline:
                 if ind.fitness.dominates(best_pipeline.fitness):
                     best_pipeline = ind
             else:
-                best_pipeline = ind    
+                best_pipeline = ind
         self._pareto_front.insert(best_pipeline)
 
     def _combine_individual_stats(self, operator_count, cv_score, individual_stats):
@@ -1571,9 +1573,9 @@ class TPOTBase(BaseEstimator):
             according to its performance on the provided data
 
         """
-        
+
         # Evaluate the individuals with an invalid fitness
-        
+
         individuals = [ind for ind in population if not ind.fitness.valid]
         num_population = len(population)
         # update pbar for valid individuals (with fitness values)
@@ -1595,7 +1597,7 @@ class TPOTBase(BaseEstimator):
                 timeout=max(int(self.max_eval_time_mins * 60), 1),
                 # use_dask=self.use_dask,
                 scorers=scorers
-        )  
+        )
 
         result_score_list = []
 
@@ -1609,14 +1611,14 @@ class TPOTBase(BaseEstimator):
                     val = partial_scores(
                         sklearn_pipeline=sklearn_pipeline
                     )
-                    
+
                     result_score_list = self._update_val(val, result_score_list)
                 dicionario_listas = {}
                 # print(f"Scores: {result_score_list}")
                 for chave in result_score_list[0]:
                     valores_chave = [dic[chave] for dic in result_score_list]
                     dicionario_listas[chave] = valores_chave
-                
+
                 try:
                     sils = None
                     dbs = None
@@ -1645,7 +1647,7 @@ class TPOTBase(BaseEstimator):
                     chunk_size = min(cpu_count() * 2, self._n_jobs * 4)
                 for chunk_idx in range(0, len(sklearn_pipeline_list), chunk_size):
                     self._stop_by_max_time_mins()
-                    
+
                     if self.use_dask:
                         import dask
 
@@ -1678,12 +1680,12 @@ class TPOTBase(BaseEstimator):
                     # update pbar
                     for val in tmp_result_scores:
                         result_score_list = self._update_val(val, result_score_list)
-                    # transposed_scores = np.array(tmp_result_scores).T.tolist()    
-                    
+                    # transposed_scores = np.array(tmp_result_scores).T.tolist()
+
                     dicionario_listas = {}
                     for chave in tmp_result_scores[0]:
                         valores_chave = [dic[chave] for dic in tmp_result_scores]
-                        dicionario_listas[chave] = valores_chave    
+                        dicionario_listas[chave] = valores_chave
                     sils = None
                     dbs = None
                     chs = None
@@ -1693,11 +1695,11 @@ class TPOTBase(BaseEstimator):
                         dbs = dicionario_listas["dbs"]
                     if "chs" in dicionario_listas:
                         chs = dicionario_listas["chs"]
-                        
+
                     mo_scorer = Scorer(sils=sils, dbs=dbs, chs=chs)
                     mo_= getattr(mo_scorer, mo_function)
                     result_score_list = mo_().tolist()
-                    
+
         except (KeyboardInterrupt, SystemExit, StopIteration) as e:
             print(f"Error ---> {e}")
             # quit()
@@ -1725,12 +1727,12 @@ class TPOTBase(BaseEstimator):
                     self.evaluated_individuals_[ind_str]["operator_count"],
                     self.evaluated_individuals_[ind_str]["internal_cv_score"],
                 )
-            
+
             # self._pareto_front.update(individuals[:num_eval_ind])
             self._pareto_front = self._update(individuals[:num_eval_ind])
             self._pop = population
             raise KeyboardInterrupt
-        
+
         self._update_evaluated_individuals_(
             result_score_list, eval_individuals_str, operator_counts, stats_dicts
         )
@@ -1745,7 +1747,7 @@ class TPOTBase(BaseEstimator):
         self._update(population)
 
         return population
-    
+
     def _preprocess_individuals(self, individuals):
         """Preprocess DEAP individuals before pipeline evaluation.
 

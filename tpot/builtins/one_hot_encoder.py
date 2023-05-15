@@ -213,7 +213,7 @@ class OneHotEncoder(BaseEstimator, TransformerMixin):
       encoding of dictionary items or strings.
     """
 
-    def __init__(self, categorical_features='auto', dtype=np.float,
+    def __init__(self, categorical_features='auto', dtype=float,
                  sparse=True, minimum_fraction=None, threshold=10):
         self.categorical_features = categorical_features
         self.dtype = dtype

@@ -1,21 +1,24 @@
 import tpot
 from tpot.tpot import TPOTClustering
 import pandas as pd
-import neptune.new as neptune
+import pm4py
+# import neptune.new as neptune
 
-_scorers = ['sil','dbs', 'complexity']
+_scorers = ['sil', 'dbs', 'complexity']
 mo = "mean_score"
 dataset_name = "scenario5_1000_early_0.1_onehot.csv"
 log_name = "scenario5_1000_early_0.1.csv"
 
 log = pd.read_csv(f"datasets/{log_name}")
 log["time:timestamp"] = pd.to_datetime(log['time:timestamp'])
+log = log.astype({'case:concept:name': 'string'})
+log = log.astype({'concept:name': 'string'})
 
 try:
     features = pd.read_csv(f"datasets/{dataset_name}")
-    case_ids = features.iloc[:,-1]
+    case_ids = features.iloc[:, -1]
     features = features.iloc[: , :-1]
-    
+
     print(f"\n==================== TPOT CLUSTERING TRAINING ==================== \n - Dataset: {dataset_name}")
 
     clusterer = TPOTClustering(
@@ -33,4 +36,3 @@ try:
 
 except Exception as e:
     print(f"{e}")
-
