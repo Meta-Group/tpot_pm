@@ -36,6 +36,7 @@ import os
 import re
 import errno
 
+
 from tempfile import mkdtemp
 from shutil import rmtree
 
@@ -61,6 +62,12 @@ from update_checker import update_check
 
 from ._version import __version__
 from .operator_utils import TPOTOperatorClassFactory, Operator, ARGType
+from .encoder import (
+    get_traces,
+    one_hot,
+    alignments
+)
+
 from .export_utils import (
     export_pipeline,
     expr_to_tree,
@@ -751,12 +758,19 @@ class TPOTBase(BaseEstimator):
         #             "a more reasonable outcome from optimization process in TPOT."
         #         )
 
+        
+        self.traces, self.case_ids = get_traces(log)
+        print(len(set(log['concept:name'])))
+        alignments(log.iloc[:50,:])
+
+        quit()
+
         # Set the seed for the GP run
         if self.random_state is not None:
             random.seed(self.random_state)  # deap uses random
             np.random.seed(self.random_state)
         self.log = log
-        self.case_ids = case_ids
+        # self.case_ids = case_ids
         self.scorers = scorers
         self._start_datetime = datetime.now()
         self._last_pipeline_write = self._start_datetime

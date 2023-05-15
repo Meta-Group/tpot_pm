@@ -9,6 +9,7 @@ dataset_name = "scenario5_1000_early_0.1_onehot.csv"
 log_name = "scenario5_1000_early_0.1.csv"
 
 log = pd.read_csv(f"datasets/{log_name}")
+log["time:timestamp"] = pd.to_datetime(log['time:timestamp'])
 
 try:
     features = pd.read_csv(f"datasets/{dataset_name}")
