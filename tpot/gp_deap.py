@@ -231,7 +231,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, pbar,
     # Initialize statistics dict for the individuals in the population, to keep track of mutation/crossover operations and predecessor relations
     for ind in population:
         initialize_stats_dict(ind)
-
+    
     population[:] = toolbox.evaluate(population)
     record = stats.compile(population) if stats is not None else {}
     logbook.record(gen=0, nevals=len(population), **record)
@@ -514,7 +514,7 @@ def _wrapped_cross_val_score(sklearn_pipeline, features, target,
             return -float('inf')
 
 @threading_timeoutable(default="Timeout")
-def _wrapped_multi_object_validation(sklearn_pipeline, features, log, case_ids, scorers, use_dask=False):
+def _wrapped_multi_object_validation(sklearn_pipeline, log, scorers, encodings, case_ids, use_dask=False):
     """Fit estimator and compute scores for a given dataset split.
 
     Parameters
@@ -534,24 +534,26 @@ def _wrapped_multi_object_validation(sklearn_pipeline, features, log, case_ids, 
         Whether to use dask
     """
     from collections import Counter
-    # print(f"Features: {features}")
-    # print(f"Case: {case_ids}")
-    # print(f"Log: {log}")
     
     scorers_map = {"sil":float(-1), "dbs": float(100), "chs":float(0), "complexity":float(1)}
     erro_ = {key: scorers_map[key] for key in scorers_map if key in scorers}
-    # # print(f"================\nPipeline: {sklearn_pipeline}")
+    
     try:
-        estimator = sklearn_pipeline.fit(features)
+        encoder = sklearn_pipeline.named_steps['encoder']
+        encoder_name = getattr(encoder, 'encoding')
+        sklearn_pipeline.set_params(encoder=None)
+        # print(f"================\nPipeline: {sklearn_pipeline}")
+    
+        temp_features = encodings[encoder_name]
+
+        estimator = sklearn_pipeline.fit(temp_features)
         labels = estimator[-1].labels_
-        temp_features = features
-
-        print(Counter(labels))
+        
         for operator in sklearn_pipeline:
-            if getattr(operator, "_estimator_type", None) != "clusterer":
+            if (getattr(operator, "_estimator_type", None) != "clusterer") and (operator != None):
                 temp_features = operator.fit_transform(temp_features)
-
-        return score_individual_(features, log, labels, scorers, case_ids)
+        
+        return score_individual_(temp_features, log, labels, scorers, case_ids)
     except TimeoutException:
         print(f"ERRO Timeout eval: {e}")
         return erro_                   
@@ -595,7 +597,6 @@ def score_individual_(temp_features, log, labels, scorers, case_ids):
     if "complexity" in scorers:
         try:
             caseIds_labels = pd.DataFrame(columns=['label','case_id'], data = zip(labels,case_ids))
-            # remover -1
             complexity_list = []
             weight_list = []
             for label in caseIds_labels.groupby('label'):
@@ -617,7 +618,7 @@ def score_individual_(temp_features, log, labels, scorers, case_ids):
     
     print(f"Scores: {calculated}\n================")
     return calculated
-    # bic = log(n)*k-2log(L)
+    
     
     
 

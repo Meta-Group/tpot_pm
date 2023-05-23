@@ -23,15 +23,17 @@ License along with TPOT. If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-from .zero_count import ZeroCount
-from .combine_dfs import CombineDFs
-from .stacking_estimator import StackingEstimator
-from .encoder import Encoder
-from .one_hot_encoder import OneHotEncoder, auto_select_categorical_features, _transform_selected
-from .feature_transformers import CategoricalSelector, ContinuousSelector
-from .feature_set_selector import FeatureSetSelector
-try:
-    from .nn import PytorchLRClassifier, PytorchMLPClassifier
-except (ModuleNotFoundError, ImportError):
-    import warnings
-    warnings.warn("Warning: optional dependency `torch` is not available. - skipping import of NN models.")
+class Encoder:
+    """Adds the count of zeros and count of non-zeros per sample as features."""
+
+    def __init__(self, encoding):
+        self.encoding = encoding
+    
+    def fit(self, X, y=None, **fit_params):
+
+        pass
+    def transform(self, X):
+        pass
+
+        
+        

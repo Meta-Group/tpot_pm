@@ -35,6 +35,7 @@ clustering_config_dict = {
         'n_clusters': range(2, 105),
         'metric': ['euclidean', 'l1', 'l2', 'manhattan', 'cosine', 'precomputed', 'cityblock'],
         'linkage': ['ward', 'complete', 'average', 'single'],
+        'encoding':['onehot','alignments','word2vec','node2vec']
     },
 
     # 'sklearn.cluster.Birch': {
@@ -48,6 +49,7 @@ clustering_config_dict = {
         'min_samples': [1, 3, 5, 10, 25, 50],
         'metric': ['euclidean', 'l1', 'l2', 'manhattan', 'cosine', 'precomputed', 'cityblock'],
         'leaf_size': [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+        'encoding':['onehot','alignments','word2vec','node2vec']
     },
 
     # 'sklearn.cluster.KMeans': {
@@ -69,6 +71,7 @@ clustering_config_dict = {
         'n_clusters': range(2, 105),
         'init': ['k-means++', 'random'],
         'max_iter': np.arange(100, 600, 100),
+        'encoding':['onehot','alignments','word2vec','node2vec']
     },
 
     # 'sklearn.cluster.MeanShift': {
@@ -88,6 +91,7 @@ clustering_config_dict = {
         'n_clusters': range(2, 105),
         'eigen_solver': ['arpack', 'lobpcg', 'amg'],
         'affinity': ['nearest_neighbors', 'rbf', 'precomputed', 'precomputed_nearest_neighbors'],
+        'encoding':['onehot','alignments','word2vec','node2vec']
     },
 
     # Preprocessors

@@ -20,6 +20,7 @@ License along with TPOT. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import deap
+import re
 
 
 def get_by_name(opname, operators):
@@ -362,12 +363,15 @@ def generate_pipeline_code(pipeline_tree, operators):
     Source code for the sklearn pipeline
 
     """
-    steps = _process_operator(pipeline_tree, operators)
-    pipeline_text = "make_pipeline(\n{STEPS}\n)".format(
-        STEPS=_indent(",\n".join(steps), 4)
-    )
-    return pipeline_text
-
+    # aqui
+    try:
+        steps = _process_operator(pipeline_tree, operators)
+        pipeline_text = "make_pipeline(\n{STEPS}\n)".format(
+            STEPS=_indent(",\n".join(steps), 4)
+        )
+        return pipeline_text
+    except Exception as e:
+        print(f"Generate Pipeline: {e}")
 
 def generate_export_pipeline_code(pipeline_tree, operators):
     """Generate code specific to the construction of the sklearn Pipeline for export_pipeline.
@@ -418,7 +422,21 @@ def _process_operator(operator, operators, depth=0):
                 "StackingEstimator(estimator={})".format(tpot_op.export(*args))
             )
         else:
-            steps.append(tpot_op.export(*args))
+            input_string = tpot_op.export(*args)
+            pattern = r'(encoding.*?)(,\s*)'
+            replacement = ''
+            try:
+                # Remove o texto de "encoding" e a primeira vírgula
+                result = re.sub(pattern, replacement, input_string)
+                # Recupera o texto removido
+                removed_text = re.search(pattern, input_string).group(1)
+                transformed_text = f'Encoder(encoding={removed_text.split("=")[1].strip()})'
+                                   
+                steps.append(transformed_text)
+                steps.append(result)
+            except Exception as e:
+                steps.append(input_string)
+            
     return steps
 
 
