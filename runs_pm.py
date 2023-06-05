@@ -96,7 +96,7 @@ while 1:
         pipeline, scores, clusters, case_ids, labels = clusterer.get_run_stats()
         print(f"Pipeline: {pipeline} Scores: {scores} Clusters: {clusters}")
         df = pd.DataFrame({'CaseIds': case_ids, 'Labels': labels})
-        df.to_csv(f"{dataset_name}_{run_id}.csv",index=False)
+        df.to_csv(f"results/{dataset_name}_{run_id}.csv",index=False)
 
         run["sil"] = scores['sil']
         run["complexity"] = scores['complexity']
