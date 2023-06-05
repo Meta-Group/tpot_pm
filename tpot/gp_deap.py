@@ -23,7 +23,7 @@ License along with TPOT. If not, see <http://www.gnu.org/licenses/>.
 
 """
 import pandas as pd
-from .Complexity import generate_pm4py_log, generate_log, build_graph, graph_complexity
+from .Complexity import generate_pm4py_log, generate_log, build_graph, graph_complexity, log_complexity
 import numpy as np
 from deap import tools, gp
 from inspect import isclass
@@ -607,7 +607,8 @@ def score_individual_(temp_features, log, labels, scorers, case_ids):
                     weight_list.append(weight)
                     continue    
                 log_filtered = log[log["case:concept:name"].isin(label[1].case_id.to_list())].copy()
-                _, complexity = graph_complexity(build_graph(generate_log(pm4py.convert_to_event_log(log_filtered))))
+                # _, complexity = graph_complexity(build_graph(generate_log(pm4py.convert_to_event_log(log_filtered))))
+                _, complexity = log_complexity(build_graph(generate_log(pm4py.convert_to_event_log(log_filtered))))
                 
                 complexity_list.append(complexity)
                 weight_list.append(weight)

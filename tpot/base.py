@@ -42,6 +42,7 @@ from shutil import rmtree
 
 import numpy as np
 from pandas import DataFrame
+import pandas as pd
 from scipy import sparse
 import deap
 from deap import base, creator, tools, gp
@@ -601,6 +602,7 @@ class TPOTBase(BaseEstimator):
             self._best_overall_pipeline = None
             self._scores = None
             self._n_clusters = None
+            self.labels = None
             self._pop = []
             self._pareto_front = None
             self._last_optimized_pareto_front = None
@@ -702,7 +704,7 @@ class TPOTBase(BaseEstimator):
         """
         raise ValueError("Use TPOTClassifier or TPOTRegressor pr TPOTClusterer")
 
-    def fit(self, features, target=None, sample_weight=None, groups=None, mo_function=None, scorers=None):
+    def fit(self, features, target=None, sample_weight=None, groups=None, mo_function=None, scorers=None, encodings=None):
         """Fit an optimized machine learning pipeline.
 
         Uses genetic programming to optimize a machine learning pipeline that
@@ -745,11 +747,13 @@ class TPOTBase(BaseEstimator):
         self._init_pretest(features, target)
         
         self.traces, self.case_ids = get_traces(features)
-        enc_onehot = one_hot(features)
-        enc_alignments = alignments(features)
-        enc_word2vec = word2vec(self.traces)
-        enc_node2vec = node2vec_(features, self.traces)
-        self.encodings = {'one_hot':enc_onehot, 'alignments': enc_alignments, 'word2vec': enc_word2vec, 'node2vec': enc_node2vec}
+        self.encodings = encodings
+        
+        # enc_onehot = one_hot(features)
+        # enc_alignments = alignments(features)
+        # enc_word2vec = word2vec(self.traces)
+        # enc_node2vec = node2vec_(features, self.traces)
+        # self.encodings = {'one_hot':enc_onehot, 'alignments': enc_alignments, 'word2vec': enc_word2vec, 'node2vec': enc_node2vec}
         
         # Set the seed for the GP run
         if self.random_state is not None:
@@ -1030,7 +1034,7 @@ class TPOTBase(BaseEstimator):
             self._scores = val
             self._best_overall_pipeline = optimized_pipeline_str
             self._n_clusters = len(set(labels))
-
+            self.labels = labels
             # # Store and fit the entire Pareto front as fitted models for convenience
             # self.pareto_front_fitted_pipelines_ = {}
 
@@ -1332,7 +1336,7 @@ class TPOTBase(BaseEstimator):
             return to_write
 
     def get_run_stats(self):
-        return self._best_overall_pipeline, self._scores, self._n_clusters
+        return self._best_overall_pipeline, self._scores, self._n_clusters, self.case_ids, self.labels
 
     def _impute_values(self, features):
         """Impute missing values in a feature set.

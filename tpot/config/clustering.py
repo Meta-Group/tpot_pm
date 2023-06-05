@@ -52,12 +52,12 @@ clustering_config_dict = {
         'encoding':['onehot','alignments','word2vec','node2vec']
     },
 
-    # 'sklearn.cluster.KMeans': {
-    #     'n_clusters': range(1, 105),
-    #     'init': ['k-means++', 'random'],
-    #     'algorithm': ['lloyd', 'elkan'],
-    #     'max_iter': np.arange(100, 600, 100)
-    # },
+    'sklearn.cluster.KMeans': {
+        'n_clusters': range(1, 105),
+        'init': ['k-means++', 'random'],
+        'algorithm': ['lloyd', 'elkan'],
+        'max_iter': np.arange(100, 600, 100)
+    },
 
     # 'sklearn.cluster.BisectingKMeans': {
     #     'n_clusters': range(1, 105),
