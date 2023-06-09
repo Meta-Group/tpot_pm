@@ -9,13 +9,13 @@ import seaborn as sns
 # warnings.filterwarnings("ignore")
 
 
-df = pd.read_csv("results/clustering_performance_.csv")
+df = pd.read_csv("results/clustering_performance.csv")
 
 for index, row in df.iterrows():
     # print(row)
     log_name = row[0]
     encoding = row[1].split("encoding=")[1].split(",")[0]
-    # print(log_name, encoding)
+    print(log_name, encoding)
     df_enc = pd.read_csv(f"datasets/encodings/{encoding}/{log_name}")
     # print(df_enc)
     df_clustered_cases = pd.read_csv(f"results/cluster_configs/{row[2]}")
