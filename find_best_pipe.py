@@ -89,10 +89,6 @@ for group in df.groupby("dataset"):
     log = log.astype({"case:concept:name": "string"})
     log = log.astype({"concept:name": "string"})
 
-    # "bpi_2012_sample_15.csv"
-    logs = ["bpi_2013_incidents.csv", "sepsis.csv", "bpi_2013_closed_problems.csv", "helpdesk.csv"]
-    if log_name in logs:
-        continue
     df_log = group[1].copy()
     # print(df_log[["sil", "complexity", "clusters"]])
 
