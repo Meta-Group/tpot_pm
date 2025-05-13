@@ -2,6 +2,12 @@
 A version of the [TPOT](https://github.com/EpistasisLab/tpot) for Process Mining. It optimizes both silhouette score and sequence
 entropy to synthesize clustering pipelines.
 
+> 🔍 **Also, don’t miss out on [TPOT-Clustering](https://github.com/Mcamilo/tpot-clustering)** –––––––––––––––––––––––––––––––––––––––––––––  
+> a versatile and powerful library for solving a wide range of **clustering problems over tabular data**.  
+> It’s designed for general-purpose use, with easy customization and high extensibility.
+
+---
+
 ## Installation
 The required packages can be installed using the following command in a terminal:
 
